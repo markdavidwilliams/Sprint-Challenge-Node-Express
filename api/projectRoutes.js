@@ -6,7 +6,7 @@ const router = express.Router();
 router.use(express.json());
 
 // all Project get requests
-router.get('/', (req, res) => {
+router.get('/', (req, res, next) => {
   projectDb
     .get()
     .then(response => {
@@ -16,14 +16,11 @@ router.get('/', (req, res) => {
         .end()
     })
     .catch(() => {
-      res
-        .status(500)
-        .json({ error: `The project information couldn't be retrieved.` })
-        .end()
+      next({ code: 500 })
     })
 })
 
-router.get('/:id', (req, res) => {
+router.get('/:id', (req, res, next) => {
   const id = req.params.id;
     projectDb
       .get(id)
@@ -33,24 +30,18 @@ router.get('/:id', (req, res) => {
           .json(response)
           .end()
       })
-      .catch(() => {
-        res
-          .status(404)
-          .json({ error: `The specified ID does not exist.` })
-          .end()
+      .catch(err => {
+        next({ code: 404 })
       })
 })
 
-router.get('/:id/actions', (req, res) => {
+router.get('/:id/actions', (req, res, next) => {
   const id = req.params.id;
   projectDb
     .getProjectActions(id)
     .then(response => {
       if(!response[0]) {
-        res
-          .status(404)
-          .json({ error: `The specified ID does not exist.` })
-          .end()
+        next({ code: 404 })
       } else {
         res
           .status(200)
@@ -59,30 +50,21 @@ router.get('/:id/actions', (req, res) => {
       }
     })
     .catch(() => {
-      res
-        .status(500)
-        .json({ error: `The information could not be retrieved.` })
-        .end()
+      next({ code: 500 })
     })
 })
 
 // all Project post request
 
-router.post('/', (req, res) => {
+router.post('/', (req, res, next) => {
   const name = req.body.name;
   const description = req.body.description;
   const completed = req.body.completed;
   const project = { name, description, completed };
   if(!(name || description)) {
-    res
-      .status(400)
-      .json({ error: `Please provide a name and description.` })
-      .end()
+    next({ code: 400 });
   } else if(name.length > 128) {
-    res
-      .status(400)
-      .json({ error: `The project name provided is greater than 128 characters.` })
-      .end()
+    next({ code: 409 });
   } else {
     projectDb
       .insert(project)
@@ -93,36 +75,29 @@ router.post('/', (req, res) => {
           .end()
       })
       .catch(() => {
-        res
-          .status(500)
-          .json({ error: `The project could not be posted.` })
-          .end()
+        next({ code: 500 })
       })
   }
 })
 
 // all Project puts
 
-router.put('/:id', (req, res) => {
+router.put('/:id', (req, res, next) => {
   const id = req.params.id;
   const name = req.body.name;
   const description = req.body.description;
   const completed = req.body.completed;
   const project = { name, description, completed };
-  if(name.length > 128) {
-    res
-      .status(400)
-      .json({ error: `The project name provided is greater than 128 characters.` })
-      .end()
+  if(!(name || description)) {
+    next({ code: 400 })
+  } else if(name.length > 128) {
+    next({ code: 409 })
   } else {
     projectDb
       .update(id, project)
       .then(response => {
         if(!response) {
-          res
-            .status(404)
-            .json({ error: `The specified ID does not exist.` })
-            .end()
+          next({ code: 404 });
         } else {
           res
             .status(200)
@@ -131,26 +106,20 @@ router.put('/:id', (req, res) => {
         }
       })
       .catch(() => {
-        res
-          .status(500)
-          .json({ error: `The project could not be updated.` })
-          .end()
+        next({ code: 500 })
       })
   }
 })
 
 // all Project deletes
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', (req, res, next) => {
   const id = req.params.id;
   projectDb
     .remove(id)
     .then(response => {
       if(!response) {
-        res
-          .status(404)
-          .json({ error: `The specified ID does not exist.` })
-          .end()
+        next({ code: 404 })
       } else {
         res
           .status(200)
@@ -159,10 +128,7 @@ router.delete('/:id', (req, res) => {
       }
     })
     .catch(() => {
-      res
-        .status(500)
-        .json({ error: `The project could not be deleted.` })
-        .end()
+      next({ code: 500 })
     })
 })
 
