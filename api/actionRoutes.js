@@ -1,13 +1,14 @@
 const express = require('express');
-const projectDb = require('../data/helpers/projectModel');
+const actionDb = require('../data/helpers/actionModel');
 
 const router = express.Router();
 
 router.use(express.json());
 
-// all Project get requests
+// all Actions gets
+
 router.get('/', (req, res) => {
-  projectDb
+  actionDb
     .get()
     .then(response => {
       res
@@ -18,74 +19,50 @@ router.get('/', (req, res) => {
     .catch(() => {
       res
         .status(500)
-        .json({ error: `The project information couldn't be retrieved.` })
+        .json({ error: `The action information could not be retrieved.` })
         .end()
     })
 })
 
 router.get('/:id', (req, res) => {
   const id = req.params.id;
-    projectDb
-      .get(id)
-      .then(response => {
-        res
-          .status(200)
-          .json(response)
-          .end()
-      })
-      .catch(() => {
-        res
-          .status(404)
-          .json({ error: `The specified ID does not exist.` })
-          .end()
-      })
-})
-
-router.get('/:id/actions', (req, res) => {
-  const id = req.params.id;
-  projectDb
-    .getProjectActions(id)
+  actionDb
+    .get(id)
     .then(response => {
-      if(!response[0]) {
-        res
-          .status(404)
-          .json({ error: `The specified ID does not exist.` })
-          .end()
-      } else {
-        res
-          .status(200)
-          .json(response)
-          .end()
-      }
+      res
+        .status(200)
+        .json(response)
+        .end()
     })
     .catch(() => {
       res
-        .status(500)
-        .json({ error: `The information could not be retrieved.` })
+        .status(404)
+        .json({ error: `The specified ID does not exist.` })
         .end()
     })
 })
 
-// all Project post request
+// all Actions posts
 
-router.post('/', (req, res) => {
-  const name = req.body.name;
+router.post('/:id', (req, res) => {
+  const project_id = req.params.id;
   const description = req.body.description;
+  const notes = req.body.notes;
   const completed = req.body.completed;
-  const project = { name, description, completed };
-  if(!(name || description)) {
+  const action = { project_id, description, notes, completed };
+  if(!(project_id || description)) {
     res
       .status(400)
-      .json({ error: `Please provide a name and description.` })
+      .json({ error: `Please provide project ID and action description.` })
       .end()
-  } else if(name.length > 128) {
+  } else if (description.length > 128) {
     res
       .status(400)
-      .json({ error: `The project name provided is greater than 128 characters.` })
+      .json({ error: `The action description is greater than 128 characters.` })
       .end()
   } else {
-    projectDb
-      .insert(project)
+    actionDb
+      .insert(action)
       .then(response => {
         res
           .status(200)
@@ -95,28 +72,28 @@ router.post('/', (req, res) => {
       .catch(() => {
         res
           .status(500)
-          .json({ error: `The project could not be posted.` })
+          .json({ error: `The action could not be posted.` })
           .end()
       })
   }
 })
 
-// all Project puts
+// all Actions puts
 
 router.put('/:id', (req, res) => {
   const id = req.params.id;
-  const name = req.body.name;
   const description = req.body.description;
+  const notes = req.body.notes;
   const completed = req.body.completed;
-  const project = { name, description, completed };
-  if(name.length > 128) {
+  const action = { description, notes, completed };
+  if(description.length > 128) {
     res
       .status(400)
-      .json({ error: `The project name provided is greater than 128 characters.` })
+      .json({ error: `The action description is greater than 128 characters.` })
       .end()
   } else {
-    projectDb
-      .update(id, project)
+    actionDb
+      .update(id, action)
       .then(response => {
         if(!response) {
           res
@@ -133,17 +110,17 @@ router.put('/:id', (req, res) => {
       .catch(() => {
         res
           .status(500)
-          .json({ error: `The project could not be updated.` })
+          .json({ error: `The action could not be updated.` })
           .end()
       })
   }
 })
 
-// all Project deletes
+// all Action deletes
 
 router.delete('/:id', (req, res) => {
   const id = req.params.id;
-  projectDb
+  actionDb
     .remove(id)
     .then(response => {
       if(!response) {
@@ -161,7 +138,7 @@ router.delete('/:id', (req, res) => {
     .catch(() => {
       res
         .status(500)
-        .json({ error: `The project could not be deleted.` })
+        .json({ error: `The action could not be deleted.` })
         .end()
     })
 })
